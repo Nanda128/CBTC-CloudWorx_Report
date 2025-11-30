@@ -3,6 +3,18 @@
 \usepackage[T1]{fontenc}
 \usepackage{graphicx}
 \usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{blindtext}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=magenta,
+    urlcolor=cyan,
+    pdftitle={Context Beyond The Code - CloudWorx Cloud Storage Platform},
+    pdfpagemode=FullScreen,
+    }
+\pagenumbering{arabic}
 
 \begin{document}
 
@@ -34,10 +46,25 @@
 
         \vspace{1cm}
     \end{titlepage}
-
     \clearpage
 
-    \section{Introduction}\label{sec:introduction}
-    blahblahblah
+    \tableofcontents
+    \newpage
+
+    \section{Project Vision}\label{sec:vision}
+    The project aims to provide a lightweight, remotely-hosted backend for secure file storage and sharing.
+    It exposes a RESTful API for Authentication, File Management, controlled and revocable sharing,using modern cryptography and token-based access to protect data in-transit and at rest.
+    The goal is to enable individual users and teams to host their files with complete security guarantees.
+
+    The emphasis is on security, file sharing, simplicity, and extensibility for Clients.
+    The Back-end seeks to be a facilitator, that does zero encryption on its own, and simply takes the data and stores it locally.
+    This way, no cryptography primitives ever leave the user's computer, and hence there's very little fear of interception.
+
+    \newpage
+    \appendixautorefname
+    \appendix
+
+    This report was built in LaTeX, the source code is in \url{https://github.com/Nanda128/CBTC-CloudWorx_Report}.
+    The source code for the CloudWorx Backend, which is the basis for this project, is \url{https://github.com/Nanda128/CloudWorx-Backend}
 
 \end{document}
