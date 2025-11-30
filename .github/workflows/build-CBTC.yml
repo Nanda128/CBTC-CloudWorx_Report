@@ -1,0 +1,144 @@
+name: Build CBTC Report
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install TeX Live and utilities
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            texlive-latex-recommended texlive-latex-extra texlive-bibtex-extra texlive-fonts-recommended \
+            texlive-science poppler-utils make perl texlive-publishers jq
+
+      - name: Ensure build script is executable
+        run: |
+          chmod +x src/scripts/build-CBTC.sh || true
+
+      - name: Run build script
+        run: |
+          set -euo pipefail
+          bash src/scripts/build-CBTC.sh
+
+      - name: Ensure version script is executable
+        run: |
+          chmod +x .github/scripts/version_bump.py || true
+
+      - name: Extract word count
+        id: get_wordcount
+        run: |
+          WORDCOUNT_FILE="src/scripts/log/wordcount.scripts.log"
+          if [ -f "$WORDCOUNT_FILE" ]; then
+            WORDCOUNT=$(grep -oP 'Word count \(PDF text\): \K\d+' "$WORDCOUNT_FILE" | tail -1)
+            if [ -n "$WORDCOUNT" ]; then
+              echo "wordcount=$WORDCOUNT" >> $GITHUB_OUTPUT
+              echo "Found word count: $WORDCOUNT"
+            else
+              echo "wordcount=unavailable" >> $GITHUB_OUTPUT
+              echo "Word count not found in log file"
+            fi
+          else
+            echo "wordcount=unavailable" >> $GITHUB_OUTPUT
+            echo "Word count log file not found"
+          fi
+
+      - name: Determine new tag
+        id: get_tag
+        run: |
+          TAG=$(python3 .github/scripts/version_bump.py)
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Create release (if needed)
+        id: create_release
+        if: steps.get_tag.outputs.tag != ''
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ steps.get_tag.outputs.tag }}
+          release_name: "CBTC Report: ${{ steps.get_tag.outputs.tag }}"
+          body: "Word Count: ${{ steps.get_wordcount.outputs.wordcount }}"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete existing PDF asset from release (if present)
+        if: steps.get_tag.outputs.tag != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          ASSET_NAMES=("CBTC-CloudWorx_23070854.pdf" "23070854-CloudWorx-User Stories.xlsx")
+
+          echo "Looking up release for tag '${{ steps.get_tag.outputs.tag }}'..."
+          RELEASE_JSON=$(curl -s -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ steps.get_tag.outputs.tag }}")
+          RELEASE_ID=$(echo "$RELEASE_JSON" | jq -r .id)
+
+          if [ -z "$RELEASE_ID" ] || [ "$RELEASE_ID" = "null" ]; then
+            echo "Release not found for tag '${{ steps.get_tag.outputs.tag }}', skipping asset delete."
+            exit 0
+          fi
+
+          echo "Found release id: $RELEASE_ID. Checking assets for existing files..."
+          for ASSET_NAME in "${ASSET_NAMES[@]}"; do
+            echo "Checking for existing asset named: $ASSET_NAME"
+            ASSET_ID=$(curl -s -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID/assets" | jq -r '.[] | select(.name=="'"$ASSET_NAME"'") | .id')
+
+            if [ -n "$ASSET_ID" ] && [ "$ASSET_ID" != "null" ]; then
+              echo "Deleting existing asset id $ASSET_ID (name: $ASSET_NAME)"
+              curl -s -X DELETE -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ github.repository }}/releases/assets/$ASSET_ID"
+              echo "Deleted asset $ASSET_ID."
+            else
+              echo "No existing asset named '$ASSET_NAME' found in release $RELEASE_ID."
+            fi
+          done
+
+      - name: Upload PDF to release (if release created)
+        if: steps.get_tag.outputs.tag != ''
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: CBTC-CloudWorx_23070854.pdf
+          asset_name: CBTC-CloudWorx_23070854.pdf
+          asset_content_type: application/pdf
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload XLSX to release (if release created)
+        if: steps.get_tag.outputs.tag != ''
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: src/23070854-CloudWorx-User Stories.xlsx
+          asset_name: 23070854-CloudWorx-User Stories.xlsx
+          asset_content_type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload generated PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: cbtc-assets
+          path: |
+            CBTC-CloudWorx_23070854.pdf
+            src/23070854-CloudWorx-User Stories.xlsx
+
+      - name: Upload auxil and log artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: auxil-and-logs
+          path: |
+            auxil
+            src/scripts/log
