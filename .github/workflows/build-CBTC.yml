@@ -80,7 +80,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          ASSET_NAMES=("CBTC-CloudWorx_23070854.pdf" "23070854-CloudWorx-User Stories.xlsx")
+          ASSET_NAMES=("CBTC-CloudWorx_23070854.pdf")
 
           echo "Looking up release for tag '${{ steps.get_tag.outputs.tag }}'..."
           RELEASE_JSON=$(curl -s -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ steps.get_tag.outputs.tag }}")
@@ -116,16 +116,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload XLSX to release (if release created)
-        if: steps.get_tag.outputs.tag != ''
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: src/23070854-CloudWorx-User Stories.xlsx
-          asset_name: 23070854-CloudWorx-User Stories.xlsx
-          asset_content_type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload generated PDF
         uses: actions/upload-artifact@v4
@@ -133,7 +123,6 @@ jobs:
           name: cbtc-assets
           path: |
             CBTC-CloudWorx_23070854.pdf
-            src/23070854-CloudWorx-User Stories.xlsx
 
       - name: Upload auxil and log artifacts
         uses: actions/upload-artifact@v4
