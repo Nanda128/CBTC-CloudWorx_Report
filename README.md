@@ -3,8 +3,9 @@
 This repository contains the LaTeX source code for my report going into the context behind the CloudWorx project.
 It has an automatic build system using GitHub Actions to compile the LaTeX into a PDF whenever changes are pushed to the repository.
 
-The main text of the report is in `src/main.tex`, with the .xlsx file stored in `src/23070854-CloudWorx-User Stories.xlsx`.
-It'll compile and deploy to to https://github.com/Nanda128/CBTC-CloudWorx_Report/releases.
+The main text of the report is in `src/main.tex`.
+It'll compile and deploy to https://github.com/Nanda128/CBTC-CloudWorx_Report/releases.
+The associated Excel file is in https://docs.google.com/spreadsheets/d/1mPKcGzwUqIfM3h6EuiR7hxJAHIBa7HQu7tX30PHponc/edit?usp=sharing.
 
 Check out `.github/workflows/build-CBTC.yml` for the build configuration.
 Part of this implementation was taken from my FYP, available at https://github.com/Nanda128/Final-Year-Project
