@@ -6,6 +6,9 @@
 \usepackage{hyperref}
 \usepackage{blindtext}
 
+% Support both IntelliJ (runs from src/) and build script (runs from repo root)
+\graphicspath{{../assets/}{assets/}}
+
 \hypersetup{
     colorlinks=true,
     linkcolor=black,
@@ -22,7 +25,7 @@
         \centering
         \vspace*{2cm}
 
-        \includegraphics[width=0.35\textwidth]{../assets/ul_logo}
+        \includegraphics[width=0.35\textwidth]{ul_logo}
 
         \vspace{2cm}
 
@@ -60,15 +63,22 @@
 
     \section{Stakeholders}\label{sec:stakeholders}
 
-    The primary stakeholders of the project are the end users who upload and share files, and organizational teams like companies who require private file exchange.
-    Secondary stakeholders include System Administrators and DevOps personnel who deploy and maintain the service, developers who seek to extend the codebase, and third-party client developers needing APIs.
-    Compliance and privacy-focused stakeholders can also benefit from this project.
+    \begin{description}
+      \item[File Owners:] Users who wish to store their own files remotely.
+      They hold and manage encryption keys on the client side, expect confidentiality, integrity, and reliable retrieval of their data.
+      \item[Share Recipients:] Users who are granted access to files hosted on CloudWorx.
+      Access is scoped and revocable; recipients must authenticate and use client-side keys to decrypt shared content.
+      \item[SysAdmins/DevOps personnel:] Staff who deploy, operate, and may extend the codebase for corporate use.
+      They prioritise secure defaults, clear documentation, maintainability, monitoring, and operational procedures.
+      \item[User:] Standard users who act as either File Owners or Share Recipients.
+      They expect a simple user experience, clear permission controls, and strong privacy guarantees.
+    \end{description}
 
     \newpage
     \appendixautorefname
     \appendix
 
-    This report was built in LaTeX, the source code is in \url{https://github.com/Nanda128/CBTC-CloudWorx_Report}.
+    This report was built in \LaTeX, the source code is in \url{https://github.com/Nanda128/CBTC-CloudWorx_Report}.
 
     The source code for the CloudWorx Backend, which is the basis for this project, is \url{https://github.com/Nanda128/CloudWorx-Backend}
 
